@@ -42,7 +42,7 @@ class ItemController extends Controller
         $validatedData = $request->validate([
             'image' => 'required|image|mimes:jpeg,jpg,png|max:5120', // Max 5MB
             'item_name' => 'required|string|max:255',
-            'category' => 'required|in:otomotive,clothes,electronic,stationary,toys,sport',
+            'category' => 'required|in:otomotive,clothes,electronic,stationary,toys,sports,furniture',
             'item_description' => 'required|string',
             'uploaded_by' => 'required|string|max:255',
             'address' => 'required|string|max:255',
@@ -82,7 +82,7 @@ class ItemController extends Controller
         $validatedData = $request->validate([
             'image' => 'nullable|image|mimes:jpeg,jpg,png|max:5120', // Optional
             'item_name' => 'required|string|max:255',
-            'category' => 'required|in:otomotive,clothes,electronic,stationary,toys,sport',
+            'category' => 'required|in:otomotive,clothes,electronic,stationary,toys,sports,furniture',
             'item_description' => 'required|string',
             'uploaded_by' => 'required|string|max:255',
             'address' => 'required|string|max:255',
