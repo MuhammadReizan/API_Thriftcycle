@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Response;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ItemController extends Controller
 {
@@ -49,10 +50,15 @@ class ItemController extends Controller
             'phone_number' => 'required|string|max:15',
         ]);
 
-        $imagePath = $request->file('image')->store('items', 'public');
+        // Upload image to Cloudinary
+        $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+            'folder' => 'uploads/items',
+        ]);
+
+        $imageUrl = $uploadedFile->getSecurePath(); // Get secure URL
 
         $item = Item::create([
-            'image_path' => $imagePath,
+            'image_path' => $imageUrl,
             'item_name' => $validatedData['item_name'],
             'category' => $validatedData['category'],
             'item_description' => $validatedData['item_description'],
@@ -90,10 +96,20 @@ class ItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($item->image_path && Storage::disk('public')->exists($item->image_path)) {
-                Storage::disk('public')->delete($item->image_path);
+            // Delete old image from Cloudinary if exists
+            if ($item->image_path) {
+                $fileUrl = $item->image_path;
+                $publicId = substr($fileUrl, strpos($fileUrl, 'uploads/items/'), strrpos($fileUrl, '.') - strpos($fileUrl, 'uploads/items/'));
+
+                Cloudinary::destroy($publicId);
             }
-            $validatedData['image_path'] = $request->file('image')->store('items', 'public');
+
+            // Upload new image to Cloudinary
+            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => 'uploads/items',
+            ]);
+
+            $validatedData['image_path'] = $uploadedFile->getSecurePath();
         } else {
             $validatedData['image_path'] = $item->image_path;
         }
@@ -111,8 +127,11 @@ class ItemController extends Controller
     {
         $item = Item::findOrFail($id);
 
-        if ($item->image_path && Storage::disk('public')->exists($item->image_path)) {
-            Storage::disk('public')->delete($item->image_path);
+        if ($item->image_path) {
+            $fileUrl = $item->image_path;
+            $publicId = substr($fileUrl, strpos($fileUrl, 'uploads/items/'), strrpos($fileUrl, '.') - strpos($fileUrl, 'uploads/items/'));
+
+            Cloudinary::destroy($publicId);
         }
 
         $item->delete();
